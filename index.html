@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e1113">
+<title>Séances vélo</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ BIBLIOTHÈQUE ============ -->
+<main id="v-home" class="view">
+  <header class="top">
+    <h1>Séances vélo</h1>
+    <label class="ftp">FTP <input id="ftp" type="number" inputmode="numeric" min="100" max="500"> W</label>
+  </header>
+
+  <button id="resume" class="resume" hidden></button>
+
+  <div class="actions">
+    <button class="btn primary" data-go="import">+ Ajouter une séance</button>
+    <button class="btn" data-go="history">Historique</button>
+    <button class="btn" data-go="settings">Réglages</button>
+  </div>
+
+  <ul id="lib" class="lib"></ul>
+</main>
+
+<!-- ============ DÉTAIL D'UNE SÉANCE ============ -->
+<main id="v-detail" class="view" hidden>
+  <header class="top">
+    <button class="back" data-back aria-label="Retour">←</button>
+    <h1 id="d-name"></h1>
+  </header>
+  <p id="d-meta" class="muted"></p>
+  <p id="d-notes" class="notes"></p>
+  <div class="actions">
+    <button id="d-start" class="btn primary big">▶ Démarrer</button>
+  </div>
+  <ol id="d-steps" class="steps"></ol>
+  <div class="actions">
+    <button id="d-edit" class="btn">Modifier</button>
+    <button id="d-copy" class="btn">Copier le JSON</button>
+    <button id="d-del" class="btn danger">Supprimer</button>
+  </div>
+</main>
+
+<!-- ============ IMPORT / ÉDITION ============ -->
+<main id="v-import" class="view" hidden>
+  <header class="top">
+    <button class="back" data-back aria-label="Retour">←</button>
+    <h1 id="i-title">Ajouter une séance</h1>
+  </header>
+  <p class="muted">Colle ici la réponse de Claude (le bloc JSON suffit, le texte autour est ignoré). Tu peux aussi partager le message depuis l'appli Claude vers « Séances vélo ».</p>
+  <div class="actions">
+    <button id="i-paste" class="btn">Coller depuis le presse-papiers</button>
+  </div>
+  <textarea id="i-text" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder='{"nom": "...", "etapes": [...]}'></textarea>
+  <div id="i-msg" class="msg" hidden></div>
+  <div id="i-preview"></div>
+  <div class="actions">
+    <button id="i-check" class="btn">Vérifier</button>
+    <button id="i-save" class="btn primary" disabled>Enregistrer</button>
+  </div>
+</main>
+
+<!-- ============ HISTORIQUE ============ -->
+<main id="v-history" class="view" hidden>
+  <header class="top">
+    <button class="back" data-back aria-label="Retour">←</button>
+    <h1>Historique</h1>
+  </header>
+  <ul id="hist" class="hist"></ul>
+</main>
+
+<!-- ============ RÉGLAGES ============ -->
+<main id="v-settings" class="view" hidden>
+  <header class="top">
+    <button class="back" data-back aria-label="Retour">←</button>
+    <h1>Réglages</h1>
+  </header>
+  <div class="card">
+    <label class="row">FTP (W) <input id="s-ftp" type="number" inputmode="numeric" min="100" max="500"></label>
+    <label class="row">Bips 3-2-1 <input id="s-beep" type="checkbox"></label>
+    <label class="row">Annonces vocales <input id="s-voice" type="checkbox"></label>
+    <label class="row">Annonce 10 s avant chaque étape <input id="s-pre" type="checkbox"></label>
+    <button id="s-test" class="btn">Tester le son et la voix</button>
+  </div>
+  <h2>Instructions pour Claude</h2>
+  <p class="muted">À coller une fois dans ta conversation (ou dans les instructions du projet) sur claude.ai : Claude te donnera ensuite chaque séance dans un format que l'appli sait lire.</p>
+  <div class="actions"><button id="s-prompt" class="btn primary">Copier les instructions</button></div>
+  <h2>Sauvegarde</h2>
+  <div class="actions">
+    <button id="s-export" class="btn">Copier toutes les données</button>
+    <button id="s-restore" class="btn">Restaurer les séances d'origine</button>
+  </div>
+  <p class="muted small">Version <span id="s-version"></span></p>
+</main>
+
+<!-- ============ EN SÉANCE (pensé pour un demi-écran) ============ -->
+<section id="v-ride" class="ride" hidden>
+  <div class="r-band"></div>
+  <div class="r-head">
+    <button class="r-icon" id="r-close" aria-label="Quitter">✕</button>
+    <span id="r-name" class="r-name"></span>
+    <span id="r-count" class="r-count"></span>
+    <button class="r-icon" id="r-list" aria-label="Liste des étapes">☰</button>
+  </div>
+  <div class="r-main"><div class="r-grid">
+    <div class="r-watts"><span id="r-watts">0</span><small>W</small></div>
+    <div class="r-time" id="r-time">00:00</div>
+  </div></div>
+  <div class="r-meta">
+    <span><b id="r-pct"></b> FTP</span>
+    <span>Z<b id="r-zone"></b></span>
+    <span>♥ <b id="r-hr"></b></span>
+  </div>
+  <div class="r-cue" id="r-cue"></div>
+  <div class="r-next"><span>Ensuite</span> <b id="r-next"></b></div>
+  <div class="r-bars">
+    <div class="bar step"><i id="r-sbar"></i></div>
+    <div class="bar"><i id="r-tbar"></i></div>
+    <div class="r-total"><span id="r-el"></span><span id="r-rem"></span></div>
+  </div>
+  <div class="r-ctrl">
+    <button id="r-prev" aria-label="Étape précédente">◀</button>
+    <button id="r-play" class="play">Démarrer</button>
+    <button id="r-skip" aria-label="Étape suivante">▶</button>
+  </div>
+
+  <div id="r-sheet" class="sheet" hidden>
+    <div class="sheet-head"><b>Étapes</b><button class="r-icon" id="r-sheet-close" aria-label="Fermer">✕</button></div>
+    <ol id="r-steps" class="steps"></ol>
+  </div>
+
+  <div id="r-end" class="sheet end" hidden>
+    <h2>Séance terminée 🎉</h2>
+    <p id="r-end-sum" class="muted"></p>
+    <label class="col">Ressenti, watts et FC relevés sur Body Bike…
+      <textarea id="r-notes" rows="4" placeholder="Ex. : répétitions à 290, 292, 295 W ; FC fin 160, 165, 168. Jambes lourdes sur la 3."></textarea>
+    </label>
+    <div class="actions">
+      <button id="r-save" class="btn primary">Enregistrer</button>
+      <button id="r-copysum" class="btn">Copier le résumé pour Claude</button>
+    </div>
+  </div>
+</section>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="sessions.js"></script>
+<script src="parser.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
