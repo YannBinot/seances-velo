@@ -1,5 +1,5 @@
 "use strict";
-const VERSION = "1.0.2";
+const VERSION = "1.0.3";
 
 /* ---------- utilitaires ---------- */
 const $ = id => document.getElementById(id);
@@ -432,5 +432,5 @@ $("r-copysum").addEventListener("click", () => { const h = saveResult(); copy(su
   if (saved && findSession(saved.id) && location.hash === "#ride") { openRide(saved.id, saved); }
   else if (location.hash === "#ride") location.hash = "";
   route();
-  if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});
+  if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(r => r.update()).catch(() => {});
 })();
