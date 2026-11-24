@@ -1,5 +1,5 @@
 // Hors ligne : les fichiers de l'appli sont mis en cache ; les polices Google aussi, au premier passage.
-const CACHE = "seances-velo-v1.0.1";
+const CACHE = "seances-velo-v1.0.2";
 const FILES = ["./", "index.html", "style.css", "app.js", "parser.js", "sessions.js", "manifest.webmanifest",
   "icons/icon-192.png", "icons/icon-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });
