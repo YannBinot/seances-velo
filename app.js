@@ -1,5 +1,5 @@
 "use strict";
-const VERSION = "1.0.0";
+const VERSION = "1.0.1";
 
 /* ---------- utilitaires ---------- */
 const $ = id => document.getElementById(id);
@@ -50,6 +50,14 @@ const total = steps => steps.reduce((a, s) => a + s.sec, 0);
 const clock = sec => { sec = Math.max(0, Math.ceil(sec - 1e-6)); const m = Math.floor(sec / 60), s = sec % 60; return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`; };
 const dur = sec => { sec = Math.round(sec); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
   return h ? `${h} h ${String(m).padStart(2, "0")}` : s ? `${m}:${String(s).padStart(2, "0")}` : `${m} min`; };
+// Cadence écrite dans la consigne (« cadence 90–100 rpm », « 85 rpm ») → affichée à part, en gros.
+const RPM_RE = /\s*(?:·\s*)?(?:cadence\s*)?(\d{2,3}(?:\s*[–-]\s*\d{2,3})?)\s*rpm\b\s*(?:·\s*)?/i;
+function splitCue(cue) {
+  const m = (cue || "").match(RPM_RE);
+  if (!m) return { rpm: "", text: cue || "" };
+  const text = (cue.slice(0, m.index) + " · " + cue.slice(m.index + m[0].length)).replace(/^[\s·,;]+|[\s·,;]+$/g, "").replace(/\s*·\s*[,;]\s*/g, " · ");
+  return { rpm: m[1].replace(/\s*[–-]\s*/, "–"), text };
+}
 const stepDur = sec => sec % 60 ? (sec < 60 ? `${sec} s` : `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`) : `${sec / 60} min`;
 
 function profile(steps) {   // mini graphique de la séance
@@ -359,7 +367,9 @@ function renderRide() {
   $("r-time").textContent = clock(left);
   $("r-time").classList.toggle("warn", running() && left <= 3.05);
   $("r-pct").textContent = pctTxt(s); $("r-zone").textContent = z; $("r-hr").textContent = s.hr || "—";
-  $("r-cue").textContent = s.cue; $("r-cue").hidden = !s.cue;
+  const cue = splitCue(s.cue);
+  $("r-cue").textContent = cue.text; $("r-cue").hidden = !cue.text;
+  $("r-rpm").textContent = cue.rpm; $("r-rpm-w").hidden = !cue.rpm;
   const n = st[i + 1];
   $("r-next").innerHTML = n ? `${esc(n.name)} · <span style="color:var(--z${zoneOf(n.hi)})">${wattsTxt(n)} W</span> · ${stepDur(n.sec)}` : "Fin de séance";
   $("r-sbar").style.width = `${Math.min(100, inStep / s.sec * 100)}%`;
